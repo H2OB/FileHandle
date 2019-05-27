@@ -42,7 +42,7 @@ typedef void(^TaskCompletionBlock)(void);
     NSURL *URL = [NSURL URLWithString:@"http://tb-video.bdstatic.com/videocp/16514218_b3883a9f1e041a181bda58804e0a5192.mp4"];
     //默认配置
   
-    configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.newhope.one"];
+    configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:URL.lastPathComponent];
     configuration.HTTPMaximumConnectionsPerHost = 10;
 
     //AFN3.0+基于封住URLSession的句柄
@@ -56,6 +56,7 @@ typedef void(^TaskCompletionBlock)(void);
     filePath = [filePath stringByAppendingPathComponent:request.URL.lastPathComponent];
     
     NSData *data = [NSData dataWithContentsOfFile:filePath];
+   
     
     if(data.length > 0){
         
@@ -128,8 +129,7 @@ typedef void(^TaskCompletionBlock)(void);
             
             if([[NSFileManager defaultManager] fileExistsAtPath:filePath.path]) {
                 
-                [manager.session finishTasksAndInvalidate];
-                //            [manager.session invalidateAndCancel];
+                [manager.session invalidateAndCancel];
 //                NSLog(@"%@",filePath.path);
 
                 [[NSFileManager defaultManager] removeItemAtPath:[filePath.path stringByReplacingOccurrencesOfString:CompletionData withString:ResumeData] error:nil];
@@ -158,16 +158,20 @@ typedef void(^TaskCompletionBlock)(void);
             //这个是因为 用户比如强退程序之后 ,再次进来的时候 存进去这个继续的data  需要用户去刷新列表
             
             NSString *documentPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-            NSString *filePath = [documentPath stringByAppendingPathComponent:ResumeData];
-            filePath = [filePath stringByAppendingPathComponent:task.currentRequest.URL.lastPathComponent];
-             NSError *error = nil;
+            NSString *directryPath = [documentPath stringByAppendingPathComponent:ResumeData];
+           NSString * filePath = [directryPath stringByAppendingPathComponent:task.currentRequest.URL.lastPathComponent];
+             NSError *writeError = nil;
             
             if(![[NSFileManager defaultManager] fileExistsAtPath:filePath]){
                 
-                [[NSFileManager defaultManager] createFileAtPath:filePath contents:nil attributes:nil];
+                BOOL creat =   [[NSFileManager defaultManager] createDirectoryAtPath:directryPath withIntermediateDirectories:YES attributes:nil error:nil];
+                if(creat){
+                    
+                }
+                
             }
             
-            BOOL sucess =   [resumeData writeToFile:filePath options:0 error:&error];
+            BOOL sucess =   [resumeData writeToFile:filePath options:0 error:&writeError];
             if(sucess){
                 
                 
@@ -175,6 +179,8 @@ typedef void(^TaskCompletionBlock)(void);
  
             
         }else{
+            
+        
             
             
         }
